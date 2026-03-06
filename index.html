@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>サモンズボード工具3.0.0</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root { --sb-gold: #f4e8c1; --sb-dark: #4d3a2b; --sb-btn: #d9c39e; --sb-red: #b33929; --sb-lightblue: #add8e6; --sb-text: #3e2723; --ui-red: #f44336; --ui-green: #4caf50; }
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+        body { background: #2a2018; font-family: -apple-system, system-ui, sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        .card { background: var(--sb-gold); width: 100%; max-width: 420px; padding: 15px; border: 4px solid var(--sb-dark); border-radius: 12px; position: relative; overflow: hidden; height: auto; }
+        
+        .lang-v-group { position: absolute; top: 12px; right: 12px; z-index: 100; display: flex; flex-direction: row; gap: 6px; }
+        .lang-v-btn { background: var(--sb-dark); color: var(--sb-gold); border: 1px solid var(--sb-gold); border-radius: 4px; font-size: 10px; padding: 4px 8px; cursor: pointer; text-align: center; }
+        .title-group { margin-bottom: 8px; min-height: 50px; }
+        .p-input { border:none; background:transparent; outline:none; width:100%; display: block; font-family: inherit; -webkit-appearance: none; }
+        #p1 { font-size:24px; font-weight:900; color:var(--sb-red); width:75%; }
+        #p2 { font-size:14px; color:#5d4037; font-weight:700; margin-top: 2px; }
+        .p-text { display: none; white-space: pre-wrap; word-break: break-all; }
+
+        .grid-sz-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
+        .btn-ui { background: var(--sb-btn); border: 2px solid var(--sb-dark); border-radius: 8px; padding: 10px 2px; font-weight: bold; font-size: 11px; text-align: center; cursor: pointer; color: var(--sb-text); display: flex; align-items: center; justify-content: center; line-height: 1.1; }
+        .btn-ui.active { background: var(--sb-dark); color: var(--sb-gold); }
+        .btn-ui.disabled { opacity: 0.3; cursor: not-allowed; filter: grayscale(1); }
+
+        #board-wrapper { width: 100%; aspect-ratio: 1/1; background: #fff; border: 4px solid var(--sb-dark); margin: 10px 0; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        #container { display: grid; width: 100%; height: 100%; grid-template-columns: repeat(var(--cols, 8), 1fr); grid-template-rows: repeat(var(--cols, 8), 1fr); }
+        .is-m#board-wrapper { background: transparent; border-color: transparent; }
+        #dual-display { display: none; width: 96%; align-items: center; justify-content: center; gap: 4%; }
+        .m-area-5 { width: 38.46%; aspect-ratio: 1/1; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr); border: 1.5px solid var(--sb-dark); background: #fff; box-sizing: border-box; }
+        .m-area-8 { width: 61.54%; aspect-ratio: 1/1; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); border: 2px solid var(--sb-dark); background: #fff; box-sizing: border-box; position: relative; }
+        
+        .cell { border: 0.5px solid #000; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; color: var(--sb-red); box-sizing: border-box; }
+        .cell.is-boss { background-color: var(--sb-lightblue) !important; }
+        
+        .panel-10 { display: none; grid-template-columns: repeat(5, 1fr); gap: 8px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; margin-bottom: 10px;}
+        .rect-btn { aspect-ratio: 1.2 / 1; border: 2px solid var(--sb-dark); border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; background: var(--sb-btn); color: var(--sb-text); }
+        .rect-btn.active-color { border: 3px solid #ff0000 !important; }
+        
+        .slot-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; }
+        .slot-box { background: var(--sb-btn); border: 2px solid var(--sb-dark); height: 45px; border-radius: 8px 8px 0 0; font-size: 18px; font-weight: 900; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .slot-box.active { background: var(--sb-dark); color: white; }
+        .select-toggle { height: 22px; font-size: 9px; font-weight: bold; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid var(--sb-dark); border-top: none; border-radius: 0 0 8px 8px; }
+        .select-toggle.off { background: var(--ui-red); }
+        .select-toggle.on { background: var(--ui-green); }
+        
+        .footer { margin-top: 15px; background: rgba(255,255,255,0.4); padding: 12px; border-radius: 10px; border: 2px solid var(--sb-dark); }
+        .label { font-size: 11px; background: var(--sb-dark); color: white; padding: 2px 10px; border-radius: 10px; margin-bottom: 6px; display: inline-block; }
+        textarea { width: 100%; border: none; background: transparent; font-size: 16px; font-weight: 800; resize: none; outline: none; line-height: 1.4; color: var(--sb-text); display: block; overflow: hidden; -webkit-appearance: none; }
+        .area-text { display: none; white-space: pre-wrap; font-size: 16px; font-weight: 800; line-height: 1.4; color: var(--sb-text); padding-bottom: 10px; }
+
+        .is-capturing .p-input, .is-capturing textarea, .is-capturing [data-html2canvas-ignore="true"] { display: none !important; }
+        .is-capturing .p-text, .is-capturing .area-text { display: block !important; }
+    </style>
+</head>
+<body>
+<div class="card" id="main-capture">
+    <div class="lang-v-group" data-html2canvas-ignore="true">
+        <div class="lang-v-btn" id="l-zht">繁體中文</div>
+        <div class="lang-v-btn" id="l-jp">日本語</div>
+    </div>
+    
+    <div class="title-group">
+        <input type="text" id="p1" class="p-input"><div id="p1-t" class="p-text" style="font-size:24px; font-weight:900; color:var(--sb-red);"></div>
+        <input type="text" id="p2" class="p-input"><div id="p2-t" class="p-text" style="font-size:14px; color:#5d4037; font-weight:700;"></div>
+    </div>
+
+    <div class="grid-sz-4" data-html2canvas-ignore="true">
+        <div class="btn-ui" id="sz5">---</div>
+        <div class="btn-ui" id="sz8">---</div>
+        <div class="btn-ui" id="sz9">---</div>
+        <div class="btn-ui" id="szM">---</div>
+    </div>
+
+    <div class="grid-3" data-html2canvas-ignore="true">
+        <div class="btn-ui" id="tab-c">---</div>
+        <div class="btn-ui" id="tab-a">---</div>
+        <div class="btn-ui" id="tab-s">---</div>
+    </div>
+    
+    <div id="board-wrapper">
+        <div id="container"></div>
+        <div id="dual-display">
+            <div id="m5-mini" class="m-area-5"></div>
+            <div id="m8-mini" class="m-area-8"></div>
+        </div>
+        <svg id="svg-layer" viewBox="0 0 100 100" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;"></svg>
+    </div>
+
+    <div id="panel-c" class="panel-10" data-html2canvas-ignore="true">
+        <div class="rect-btn c-btn" id="c_y" style="background:#fff176"></div>
+        <div class="rect-btn c-btn" id="c_g" style="background:#a5d6a7"></div>
+        <div class="rect-btn c-btn" id="c_o" style="background:#ffcc80"></div>
+        <div class="rect-btn c-btn" id="c_r" style="background:#ef9a9a"></div>
+        <div class="rect-btn" id="res-c" style="font-size:12px">---</div>
+        <div class="rect-btn c-btn" id="c_p" style="background:#ce93d8"></div>
+        <div class="rect-btn c-btn" id="c_b" style="background:#8d6e63"></div>
+        <div class="rect-btn c-btn" id="c_lg" style="background:#f1f3f4"></div>
+        <div class="rect-btn c-btn" id="c_w" style="background:#ffffff"></div>
+        <div class="rect-btn" id="und-c" style="font-size:12px; color:var(--ui-red)">---</div>
+    </div>
+
+    <div id="panel-a" class="panel-10" data-html2canvas-ignore="true">
+        <div class="rect-btn a-ctrl" id="btn-n">↑</div><div class="rect-btn a-ctrl" id="btn-s">↓</div>
+        <div class="rect-btn a-ctrl" id="btn-w">←</div><div class="rect-btn a-ctrl" id="btn-e">→</div>
+        <div class="rect-btn" id="res-a" style="font-size:12px">---</div>
+        <div class="rect-btn a-ctrl" id="btn-nw">↖</div><div class="rect-btn a-ctrl" id="btn-ne">↗</div>
+        <div class="rect-btn a-ctrl" id="btn-sw">↙</div><div class="rect-btn a-ctrl" id="btn-se">↘</div>
+        <div class="rect-btn" id="und-a" style="font-size:12px; color:var(--ui-red)">---</div>
+    </div>
+
+    <div id="panel-s" class="panel" style="display:none; padding:10px;" data-html2canvas-ignore="true">
+        <div class="slot-grid" id="slot-list"></div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="btn-ui" id="clr-s">---</div><div class="btn-ui" id="exp-s">---</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="label" id="lb-v1">---</div><textarea id="v1" rows="1"></textarea><div id="v1-t" class="area-text"></div>
+        <div class="label" id="lb-v2">---</div><textarea id="v2" rows="1"></textarea><div id="v2-t" class="area-text"></div>
+        <div class="label" id="lb-v3">---</div><textarea id="v3" rows="1"></textarea><div id="v3-t" class="area-text"></div>
+        <div class="label" id="lb-v4">---</div><textarea id="v4" rows="3"></textarea><div id="v4-t" class="area-text"></div>
+    </div>
+</div>
+
+<script>
+    const TXT = {
+        zht: {s5:"5x5 基礎", s8:"8x8 攻略", s9:"9x9 演示", sm:"5+8 複合", c:"填色功能", a:"箭頭模式", s:"截圖系統", res:"重置", und:"撤回", clr:"清空數據", exp:"拼圖導出", l1:"技能類別", l2:"技能名稱", l3:"角色台詞", l4:"技能內容", p1:"請輸入關卡資訊...", p2:"請輸入角色資訊...", v1:"請輸入技能類別...", v2:"請輸入技能名稱...", v3:"請輸入角色台詞...", v4:"請輸入技能內容...", sel:"已選", unsel:"未選"},
+        jp: {s5:"5x5 基礎", s8:"8x8 攻略", s9:"9x9 演習", sm:"5+8 複合", c:"着色機能", a:"矢印モード", s:"截图システム", res:"リセット", und:"戻る", clr:"データ消去", exp:"画像出力", l1:"タイプ", l2:"スキル名", l3:"セリフ", l4:"スキル詳細", p1:"ステージ情報...", p2:"キャラクター情報...", v1:"タイプを入力...", v2:"スキル名を入力...", v3:"セリフを入力...", v4:"スキル詳細を入力...", sel:"選擇済", unsel:"未選擇"}
+    };
+    const COLORS = {c_y:'#fff176', c_g:'#a5d6a7', c_o:'#ffcc80', c_r:'#ef9a9a', c_p:'#ce93d8', c_b:'#8d6e63', c_lg:'#f1f3f4', c_w:'#ffffff'};
+    const ARR_ICON = { n:"↑", s:"↓", w:"←", e:"→", nw:"↖", ne:"↗", sw:"↙", se:"↘" };
+    const SVG_CFG = { n:{x:50,y:37.5,r:0}, s:{x:50,y:62.5,r:180}, w:{x:37.5,y:50,r:270}, e:{x:62.5,y:50,r:90}, nw:{x:37.5,y:37.5,r:315}, ne:{x:62.5,y:37.5,r:45}, sw:{x:37.5,y:62.5,r:225}, se:{x:62.5,y:62.5,r:135} };
+    
+    let curS = 8, curI = 0, curC = null, curT = null, curL = 'zht';
+    let db = Array(16).fill(null).map(() => ({ sz:8, t1:"", t2:"", v1:"", v2:"", v3:"", v4:"", 5:{cells:{}}, 8:{cells:{},arrows:{}}, 9:{cells:{}}, history:[] }));
+    let selFlags = Array(16).fill(false);
+
+    // 強制存檔到 LocalStorage
+    function saveToDevice() {
+        saveCur(); // 先抓取目前畫面上的文字
+        localStorage.setItem('SB_TOOL_DATA', JSON.stringify({db, selFlags, curL}));
+    }
+
+    // 從 LocalStorage 載入
+    function loadFromDevice() {
+        const raw = localStorage.getItem('SB_TOOL_DATA');
+        if (raw) {
+            const data = JSON.parse(raw);
+            db = data.db; selFlags = data.selFlags; curL = data.curL || 'zht';
+        }
+    }
+    
+    function bind(id, fn) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('click', (e) => { e.preventDefault(); fn(); saveToDevice(); }, {passive: false});
+        }
+    }
+
+    function setL(l) {
+        curL = l; const t = TXT[l];
+        document.getElementById('sz5').innerText = t.s5; document.getElementById('sz8').innerText = t.s8;
+        document.getElementById('sz9').innerText = t.s9; document.getElementById('szM').innerText = t.sm;
+        document.getElementById('tab-c').innerText = t.c; document.getElementById('tab-a').innerText = t.a; document.getElementById('tab-s').innerText = t.s;
+        document.getElementById('res-c').innerText = t.res; document.getElementById('res-a').innerText = t.res;
+        document.getElementById('und-c').innerText = t.und; document.getElementById('und-a').innerText = t.und;
+        document.getElementById('clr-s').innerText = t.clr; document.getElementById('exp-s').innerText = t.exp;
+        ['v1','v2','v3','v4'].forEach((v,i)=>document.getElementById('lb-'+v).innerText=t['l'+(i+1)]);
+        document.getElementById('p1').placeholder = t.p1; document.getElementById('p2').placeholder = t.p2;
+        ['v1','v2','v3','v4'].forEach(v => document.getElementById(v).placeholder = t[v]);
+        updateSlots();
+    }
+
+    function setSZ(n) { 
+        curS = n; db[curI].sz = n; 
+        if(n===9) init9x9(curI);
+        document.getElementById('tab-a').classList.toggle('disabled', n !== 8);
+        document.getElementById('tab-c').classList.toggle('disabled', n === 'M');
+        if ((n === 'M' || n === 5 || n === 9) && curT === 'a') sw(null);
+        if (n === 'M' && curT === 'c') sw(null);
+        document.getElementById('board-wrapper').classList.toggle('is-m', n === 'M');
+        document.getElementById('container').style.setProperty('--cols', n === 'M' ? 8 : n); 
+        document.querySelectorAll('#sz5, #sz8, #sz9, #szM').forEach(b => b.classList.toggle('active', b.id === 'sz'+n)); 
+        init(); 
+    }
+
+    function init() { 
+        const g = document.getElementById('container'), dual = document.getElementById('dual-display'), svg = document.getElementById('svg-layer');
+        g.innerHTML = '';
+        if(curS === 'M') {
+            g.style.display = 'none'; svg.style.display = 'none'; dual.style.display = 'flex';
+            drawZone('m5-mini', 5, db[curI][5].cells, {}); 
+            drawZone('m8-mini', 8, db[curI][8].cells, db[curI][8].arrows);
+        } else {
+            g.style.display = 'grid'; svg.style.display = 'block'; dual.style.display = 'none';
+            const boss = (curS === 8) ? [27, 28, 35, 36] : [];
+            const mid = (curS === 5) ? 12 : (curS === 9 ? 40 : -1);
+            for(let i=0; i<curS*curS; i++) { 
+                const c = document.createElement('div'); c.className = 'cell'; if(i === mid) c.innerText = '★'; if(boss.includes(i)) c.classList.add('is-boss'); 
+                c.addEventListener('click', () => { if(curT !== 'c' || boss.includes(i) || !curC) return; saveHistory(); db[curI][curS].cells[i] = (db[curI][curS].cells[i] === curC) ? null : curC; render(); saveToDevice(); }); 
+                g.appendChild(c); 
+            } 
+        }
+        render(); 
+    }
+
+    function drawZone(id, sz, cellData, arrowData) {
+        const el = document.getElementById(id); el.innerHTML = ''; el.style.position = 'relative';
+        const boss = (sz === 8) ? [27, 28, 35, 36] : [];
+        const mid = (sz === 5) ? 12 : -1;
+        for(let i=0; i<sz*sz; i++) {
+            const c = document.createElement('div'); c.className = 'cell';
+            if(i === mid) c.innerText = '★'; if(boss.includes(i)) c.classList.add('is-boss');
+            if(cellData[i]) c.style.backgroundColor = COLORS[cellData[i]];
+            el.appendChild(c);
+        }
+        if(sz === 8 && Object.keys(arrowData).length > 0) {
+            const svgNS = "http://www.w3.org/2000/svg";
+            const miniSvg = document.createElementNS(svgNS, "svg");
+            miniSvg.setAttribute("viewBox", "0 0 100 100");
+            miniSvg.style.cssText = "position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;";
+            Object.keys(arrowData).forEach(k => {
+                const count = arrowData[k]; if(!count) return;
+                const g = document.createElementNS(svgNS, "g");
+                g.setAttribute("transform", `translate(${SVG_CFG[k].x},${SVG_CFG[k].y}) rotate(${SVG_CFG[k].r})`);
+                for(let i=0; i<count; i++){
+                    const p = document.createElementNS(svgNS, "path");
+                    p.setAttribute("d", "M 0,-2.8 L 3.8,1.2 L 1.2,0.4 L 0,1.8 L -1.2,0.4 L -3.8,1.2 Z");
+                    p.setAttribute("fill", "#b33929"); p.setAttribute("stroke", "white"); p.setAttribute("stroke-width", "0.4");
+                    let yOffset = (count === 1) ? 0.5 : ((i === 1) ? 1.0 : -1.0);
+                    p.setAttribute("transform", `translate(0, ${yOffset})`);
+                    g.appendChild(p);
+                }
+                miniSvg.appendChild(g);
+            });
+            el.appendChild(miniSvg);
+        }
+    }
+
+    function render() {
+        if(curS !== 'M') {
+            document.querySelectorAll('#container .cell').forEach((c, i) => { 
+                const boss = (curS === 8) ? [27, 28, 35, 36] : []; 
+                const clr = db[curI][curS].cells[i]; c.style.backgroundColor = clr ? COLORS[clr] : (boss.includes(i) ? '' : 'transparent'); 
+            });
+            drawA();
+        }
+        document.querySelectorAll('.c-btn').forEach(b => b.classList.toggle('active-color', b.id === curC));
+        updateSlots(); updateABtn();
+    }
+
+    function load(i) { 
+        saveCur(); curI = i; const s = db[i]; 
+        document.getElementById('p1').value = s.t1; document.getElementById('p2').value = s.t2; 
+        ['v1','v2','v3','v4'].forEach(v => document.getElementById(v).value = s[v] || "");
+        setSZ(s.sz);
+    }
+
+    function saveCur() {
+        const s = db[curI]; s.t1 = document.getElementById('p1').value; s.t2 = document.getElementById('p2').value;
+        ['v1','v2','v3','v4'].forEach(v => s[v] = document.getElementById(v).value);
+    }
+
+    function updateSlots() { 
+        const box = document.getElementById('slot-list'); box.innerHTML = ''; 
+        for(let i=0; i<16; i++) { 
+            const d = document.createElement('div');
+            d.innerHTML = `<div class="slot-box ${i===curI?'active':''}" id="sl-box-${i}">${i+1}</div><div class="select-toggle ${selFlags[i]?'on':'off'}" id="sl-tg-${i}">${selFlags[i]?TXT[curL].sel:TXT[curL].unsel}</div>`; 
+            box.appendChild(d); 
+            bind(`sl-box-${i}`, () => load(i));
+            bind(`sl-tg-${i}`, () => { selFlags[i]=!selFlags[i]; updateSlots(); });
+        } 
+    }
+
+    async function stitch() {
+        saveCur(); saveToDevice();
+        const ts = selFlags.map((v, i) => v ? i : -1).filter(v => v !== -1);
+        if (!ts.length) return;
+        const card = document.getElementById('main-capture'), backupI = curI, imgs = [];
+        let maxHeight = 0;
+        
+        for (let id of ts) {
+            load(id);
+            ['p1','p2','v1','v2','v3','v4'].forEach(k => document.getElementById(k+'-t').innerText = document.getElementById(k).value || " ");
+            card.classList.add('is-capturing');
+            let h = Math.ceil(card.getBoundingClientRect().height);
+            if (h > maxHeight) maxHeight = h;
+            card.classList.remove('is-capturing');
+        }
+
+        card.style.height = maxHeight + 'px';
+        card.classList.add('is-capturing');
+        for (let id of ts) {
+            load(id);
+            ['p1','p2','v1','v2','v3','v4'].forEach(k => document.getElementById(k+'-t').innerText = document.getElementById(k).value || " ");
+            init(); await new Promise(r => setTimeout(r, 600));
+            const canvas = await html2canvas(card, { scale: 2, backgroundColor: "#f4e8c1", height: maxHeight, useCORS: true });
+            imgs.push(canvas);
+        }
+        card.classList.remove('is-capturing'); card.style.height = '';
+
+        const r = (imgs.length <= 4) ? 1 : (imgs.length <= 8 ? 2 : (imgs.length <= 12 ? 3 : 4)), c = Math.ceil(imgs.length / r);
+        const fCan = document.createElement('canvas'), ctx = fCan.getContext('2d');
+        fCan.width = imgs[0].width * c; fCan.height = imgs[0].height * r;
+        ctx.fillStyle = "#f4e8c1"; ctx.fillRect(0, 0, fCan.width, fCan.height);
+        imgs.forEach((img, i) => { ctx.drawImage(img, (i % c) * img.width, Math.floor(i / c) * img.height); });
+        
+        const imgData = fCan.toDataURL("image/png");
+        const win = window.open();
+        win.document.write(`<iframe src="${imgData}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+        load(backupI);
+    }
+
+    function init9x9(idx) { for(let i=0; i<81; i++) { let r=Math.floor(i/9), c=i%9; if(r<2||r>6||c<2||c>6) db[idx][9].cells[i] = 'c_lg'; } }
+    function handleColorClick(id) { if (curC === id) floodFill(id); else { curC = id; render(); } }
+    function floodFill(colorId) { if(curS === 'M') return; saveHistory(); const boss = (curS === 8) ? [27, 28, 35, 36] : []; for (let i = 0; i < curS * curS; i++) { if (curS === 8 && boss.includes(i)) continue; db[curI][curS].cells[i] = colorId; } render(); }
+    function sw(t) { if(curS === 'M' && (t === 'c' || t === 'a')) return; if(t === 'a' && curS !== 8) return; curT = (curT === t) ? null : t; ['panel-c','panel-a','panel-s'].forEach(p => document.getElementById(p).style.display = 'none'); if(curT) document.getElementById('panel-'+curT).style.display = (curT==='s'?'block':'grid'); document.querySelectorAll('#tab-c, #tab-a, #tab-s').forEach(b => b.classList.toggle('active', b.id === 'tab-'+curT)); render(); }
+    function updateABtn() { const arrows = db[curI][8].arrows; Object.keys(ARR_ICON).forEach(k => { const btn = document.getElementById('btn-'+k); if(!btn) return; const count = arrows[k] || 0; btn.innerText = count === 0 ? ARR_ICON[k] : (count === 1 ? ARR_ICON[k] : ARR_ICON[k]+ARR_ICON[k]); btn.style.background = count > 0 ? 'var(--sb-dark)' : 'var(--sb-btn)'; btn.style.color = count > 0 ? 'white' : 'var(--sb-text)'; }); }
+    function drawA() { const svg = document.getElementById('svg-layer'); svg.innerHTML = ''; if(curS !== 8) return; Object.keys(db[curI][8].arrows).forEach(k => { const count = db[curI][8].arrows[k]; if(!count) return; const g = document.createElementNS("http://www.w3.org/2000/svg", "g"); g.setAttribute("transform", `translate(${SVG_CFG[k].x},${SVG_CFG[k].y}) rotate(${SVG_CFG[k].r})`); for(let i=0; i<count; i++){ const p = document.createElementNS("http://www.w3.org/2000/svg", "path"); p.setAttribute("d", "M 0,-2.8 L 3.8,1.2 L 1.2,0.4 L 0,1.8 L -1.2,0.4 L -3.8,1.2 Z"); p.setAttribute("fill", "#b33929"); p.setAttribute("stroke", "white"); p.setAttribute("stroke-width", "0.4"); let yOffset = (count === 1) ? 0.5 : ((i === 1) ? 1.0 : -1.0); p.setAttribute("transform", `translate(0, ${yOffset})`); g.appendChild(p); } svg.appendChild(g); }); }
+    function saveHistory() { if(curS === 'M') return; db[curI].history.push(JSON.stringify({cells: {...db[curI][curS].cells}, arrows: {...db[curI][8].arrows}})); if(db[curI].history.length > 20) db[curI].history.shift(); }
+    function undo() { if(curS === 'M' || !db[curI].history.length) return; const last = JSON.parse(db[curI].history.pop()); db[curI][curS].cells = last.cells; if(curS === 8) db[curI][8].arrows = last.arrows; render(); saveToDevice(); }
+    function doA(k) { if(curS !== 8) return; saveHistory(); db[curI][8].arrows[k] = ((db[curI][8].arrows[k] || 0) + 1) % 3; render(); saveToDevice(); }
+
+    window.onload = () => {
+        loadFromDevice();
+        
+        // 綁定所有按鈕事件
+        bind('l-zht', () => setL('zht'));
+        bind('l-jp', () => setL('jp'));
+        bind('sz5', () => setSZ(5));
+        bind('sz8', () => setSZ(8));
+        bind('sz9', () => setSZ(9));
+        bind('szM', () => setSZ('M'));
+        bind('tab-c', () => sw('c'));
+        bind('tab-a', () => sw('a'));
+        bind('tab-s', () => sw('s'));
+        bind('res-c', () => { if(curS === 'M') return; saveHistory(); db[curI][curS].cells = {}; if(curS===9) init9x9(curI); render(); });
+        bind('res-a', () => { if(curS !== 8) return; saveHistory(); db[curI][8].arrows = {}; render(); });
+        bind('und-c', undo);
+        bind('und-a', undo);
+        bind('clr-s', () => { if(confirm("Clear current slot?")){ db[curI]={sz:8,t1:"",t2:"",v1:"",v2:"",v3:"",v4:"",5:{cells:{}},8:{cells:{},arrows:{}},9:{cells:{}},history:[]}; load(curI); saveToDevice(); }});
+        bind('exp-s', stitch);
+        
+        Object.keys(COLORS).forEach(id => bind(id, () => handleColorClick(id)));
+        Object.keys(ARR_ICON).forEach(k => bind('btn-'+k, () => doA(k)));
+
+        // 綁定輸入框自動存檔
+        ['p1', 'p2', 'v1', 'v2', 'v3', 'v4'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                saveCur();
+                localStorage.setItem('SB_TOOL_DATA', JSON.stringify({db, selFlags, curL}));
+            });
+        });
+
+        setL(curL); load(curI); 
+    }; 
+</script>
+</body>
+</html>
