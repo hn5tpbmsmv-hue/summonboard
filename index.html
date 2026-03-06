@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>サモンズボード工具 3.1.0</title>
+    <title>サモンズボード工具 3.1.2</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root { --sb-gold: #f4e8c1; --sb-dark: #4d3a2b; --sb-btn: #d9c39e; --sb-red: #b33929; --sb-lightblue: #add8e6; --sb-text: #3e2723; --ui-red: #f44336; --ui-green: #4caf50; }
@@ -11,10 +11,11 @@
         body { background: #2a2018; font-family: -apple-system, system-ui, sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
         .card { background: var(--sb-gold); width: 100%; max-width: 420px; padding: 15px; border: 4px solid var(--sb-dark); border-radius: 12px; position: relative; overflow: hidden; }
         
+        /* UI 元素 */
         .lang-v-group { position: absolute; top: 12px; right: 12px; z-index: 100; display: flex; gap: 6px; }
         .lang-v-btn { background: var(--sb-dark); color: var(--sb-gold); border: 1px solid var(--sb-gold); border-radius: 4px; font-size: 10px; padding: 4px 8px; cursor: pointer; }
         .title-group { margin-bottom: 8px; min-height: 50px; }
-        .p-input { border:none; background:transparent; outline:none; width:100%; display: block; -webkit-appearance: none; }
+        .p-input { border:none; background:transparent; outline:none; width:100%; display: block; -webkit-appearance: none; font-family: inherit; }
         #p1 { font-size:24px; font-weight:900; color:var(--sb-red); width:75%; }
         #p2 { font-size:14px; color:#5d4037; font-weight:700; margin-top: 2px; }
         .p-text { display: none; white-space: pre-wrap; word-break: break-all; }
@@ -23,8 +24,9 @@
         .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
         .btn-ui { background: var(--sb-btn); border: 2px solid var(--sb-dark); border-radius: 8px; padding: 10px 2px; font-weight: bold; font-size: 11px; text-align: center; cursor: pointer; color: var(--sb-text); display: flex; align-items: center; justify-content: center; }
         .btn-ui.active { background: var(--sb-dark); color: var(--sb-gold); }
-        .btn-ui.disabled { opacity: 0.3; filter: grayscale(1); }
+        .btn-ui.disabled { opacity: 0.3; filter: grayscale(1); pointer-events: none; }
 
+        /* 棋盤區域 */
         #board-wrapper { width: 100%; aspect-ratio: 1/1; background: #fff; border: 4px solid var(--sb-dark); margin: 10px 0; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         #container { display: grid; width: 100%; height: 100%; grid-template-columns: repeat(var(--cols, 8), 1fr); grid-template-rows: repeat(var(--cols, 8), 1fr); }
         .is-m#board-wrapper { background: transparent; border-color: transparent; }
@@ -36,6 +38,7 @@
         .cell { border: 0.5px solid #000; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; color: var(--sb-red); }
         .cell.is-boss { background-color: var(--sb-lightblue) !important; }
         
+        /* 控制面板 */
         .panel-10 { display: none; grid-template-columns: repeat(5, 1fr); gap: 8px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; margin-bottom: 10px;}
         .rect-btn { aspect-ratio: 1.2 / 1; border: 2px solid var(--sb-dark); border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; background: var(--sb-btn); }
         .rect-btn.active-color { border: 3px solid #ff0000; }
@@ -47,16 +50,19 @@
         .select-toggle.off { background: var(--ui-red); }
         .select-toggle.on { background: var(--ui-green); }
         
+        /* 頁尾技能資訊 */
         .footer { margin-top: 15px; background: rgba(255,255,255,0.4); padding: 12px; border-radius: 10px; border: 2px solid var(--sb-dark); }
         .label { font-size: 11px; background: var(--sb-dark); color: white; padding: 2px 10px; border-radius: 10px; margin-bottom: 6px; display: inline-block; }
-        textarea { width: 100%; border: none; background: transparent; font-size: 16px; font-weight: 800; resize: none; outline: none; display: block; -webkit-appearance: none; }
+        textarea { width: 100%; border: none; background: transparent; font-size: 16px; font-weight: 800; resize: none; outline: none; display: block; -webkit-appearance: none; font-family: inherit; }
         .area-text { display: none; white-space: pre-wrap; font-size: 16px; font-weight: 800; color: var(--sb-text); padding-bottom: 10px; }
 
+        /* 導出層 */
         #export-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; }
         #export-img { max-width: 100%; border: 4px solid white; border-radius: 8px; margin-bottom: 20px; }
         .overlay-tip { color: white; font-weight: bold; margin-bottom: 15px; text-align: center; }
         .close-btn { background: var(--ui-red); color: white; padding: 10px 30px; border-radius: 20px; font-weight: bold; cursor: pointer; }
 
+        /* 截圖模式 */
         .is-capturing .p-input, .is-capturing textarea, .is-capturing [data-html2canvas-ignore="true"] { display: none !important; }
         .is-capturing .p-text, .is-capturing .area-text { display: block !important; }
     </style>
@@ -141,14 +147,13 @@
 
 <script>
     const TXT = {
-        zht: {s5:"5x5 基礎", s8:"8x8 攻略", s9:"9x9 演示", sm:"5+8 複合", c:"填色功能", a:"箭頭模式", s:"截圖系統", res:"重置", und:"撤回", clr:"清空本頁存檔", exp:"拼圖導出", l1:"技能類別", l2:"技能名稱", l3:"角色台詞", l4:"技能內容", p1:"請輸入關卡資訊...", p2:"請輸入角色資訊...", v1:"請輸入技能類別...", v2:"請輸入技能名稱...", v3:"請輸入角色台詞...", v4:"請輸入技能內容...", sel:"已選", unsel:"未選"},
+        zht: {s5:"5x5 基礎", s8:"8x8 攻略", s9:"9x9 演示", sm:"5+8 複合", c:"填色功能", a:"箭頭模式", s:"截圖系統", res:"重置", und:"撤回", clr:"清除本頁存檔", exp:"拼圖導出", l1:"技能類別", l2:"技能名稱", l3:"角色台詞", l4:"技能內容", p1:"請輸入關卡資訊...", p2:"請輸入角色資訊...", v1:"請輸入技能類別...", v2:"請輸入技能名稱...", v3:"請輸入角色台詞...", v4:"請輸入技能內容...", sel:"已選", unsel:"未選"},
         jp: {s5:"5x5 基礎", s8:"8x8 攻略", s9:"9x9 演習", sm:"5+8 複合", c:"着色機能", a:"矢印モード", s:"截图システム", res:"リセット", und:"戻る", clr:"データ消去", exp:"画像出力", l1:"タイプ", l2:"スキル名", l3:"セリフ", l4:"スキル詳細", p1:"ステージ情報...", p2:"キャラクター情報...", v1:"タイプを入力...", v2:"スキル名を入力...", v3:"セリフを入力...", v4:"スキル詳細を入力...", sel:"選擇済", unsel:"未選擇"}
     };
     const COLORS = {c_y:'#fff176', c_g:'#a5d6a7', c_o:'#ffcc80', c_r:'#ef9a9a', c_p:'#ce93d8', c_b:'#8d6e63', c_lg:'#f1f3f4', c_w:'#ffffff'};
     const ARR_ICON = { n:"↑", s:"↓", w:"←", e:"→", nw:"↖", ne:"↗", sw:"↙", se:"↘" };
     const SVG_CFG = { n:{x:50,y:37.5,r:0}, s:{x:50,y:62.5,r:180}, w:{x:37.5,y:50,r:270}, e:{x:62.5,y:50,r:90}, nw:{x:37.5,y:37.5,r:315}, ne:{x:62.5,y:37.5,r:45}, sw:{x:37.5,y:62.5,r:225}, se:{x:62.5,y:62.5,r:135} };
     
-    // 初始化單個存檔點的結構
     function createEmptySlot() {
         return { sz:8, t1:"", t2:"", v1:"", v2:"", v3:"", v4:"", 5:{cells:{}}, 8:{cells:{},arrows:{}}, 9:{cells:{}}, history:[] };
     }
@@ -159,11 +164,11 @@
 
     function saveToDevice() {
         saveCur();
-        localStorage.setItem('SB_TOOL_V3_FINAL', JSON.stringify({db, selFlags, curL}));
+        localStorage.setItem('SB_TOOL_V3_FINAL_STABLE', JSON.stringify({db, selFlags, curL}));
     }
 
     function loadFromDevice() {
-        const raw = localStorage.getItem('SB_TOOL_V3_FINAL');
+        const raw = localStorage.getItem('SB_TOOL_V3_FINAL_STABLE');
         if (raw) {
             const data = JSON.parse(raw);
             db = data.db; selFlags = data.selFlags; curL = data.curL || 'zht';
@@ -268,15 +273,25 @@
     }
 
     function load(i) { 
-        saveCur(); curI = i; const s = db[i]; 
-        document.getElementById('p1').value = s.t1; document.getElementById('p2').value = s.t2; 
-        ['v1','v2','v3','v4'].forEach(v => document.getElementById(v).value = s[v] || "");
+        saveCur(); 
+        curI = i; const s = db[i]; 
+        document.getElementById('p1').value = s.t1 || ""; 
+        document.getElementById('p2').value = s.t2 || ""; 
+        document.getElementById('v1').value = s.v1 || "";
+        document.getElementById('v2').value = s.v2 || "";
+        document.getElementById('v3').value = s.v3 || "";
+        document.getElementById('v4').value = s.v4 || "";
         setSZ(s.sz);
     }
 
     function saveCur() {
-        const s = db[curI]; s.t1 = document.getElementById('p1').value; s.t2 = document.getElementById('p2').value;
-        ['v1','v2','v3','v4'].forEach(v => s[v] = document.getElementById(v).value);
+        const s = db[curI]; 
+        s.t1 = document.getElementById('p1').value; 
+        s.t2 = document.getElementById('p2').value;
+        s.v1 = document.getElementById('v1').value; 
+        s.v2 = document.getElementById('v2').value;
+        s.v3 = document.getElementById('v3').value; 
+        s.v4 = document.getElementById('v4').value;
     }
 
     function updateSlots() { 
@@ -355,12 +370,15 @@
         bind('und-c', undo);
         bind('und-a', undo);
         
-        // 聯動清除功能：清除當前存檔點的所有資料
+        // 核心修正：聯動清除
         bind('clr-s', () => { 
-            const msg = curL === 'zht' ? "確定要清除「目前編號」的所有存檔（文字與地圖）嗎？" : "このスロットのデータをすべて消去しますか？";
+            const msg = curL === 'zht' ? "確定要清除「目前編號」的所有存檔（包含標題與技能內容）嗎？" : "このスロットのデータをすべて消去しますか？";
             if(confirm(msg)){ 
                 db[curI] = createEmptySlot(); 
-                load(curI); 
+                // 手動強制清空畫面上所有 input/textarea
+                const fields = ['p1', 'p2', 'v1', 'v2', 'v3', 'v4'];
+                fields.forEach(f => document.getElementById(f).value = "");
+                setSZ(8); 
                 saveToDevice(); 
             }
         });
@@ -371,11 +389,11 @@
         Object.keys(COLORS).forEach(id => bind(id, () => handleColorClick(id)));
         Object.keys(ARR_ICON).forEach(k => bind('btn-'+k, () => doA(k)));
 
-        // 自動存檔：所有欄位皆聯動
+        // 全內容自動存檔監聽
         ['p1', 'p2', 'v1', 'v2', 'v3', 'v4'].forEach(id => {
             document.getElementById(id).addEventListener('input', () => {
                 saveCur(); 
-                localStorage.setItem('SB_TOOL_V3_FINAL', JSON.stringify({db, selFlags, curL}));
+                localStorage.setItem('SB_TOOL_V3_FINAL_STABLE', JSON.stringify({db, selFlags, curL}));
             });
         });
 
