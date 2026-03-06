@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>サモンズボード工具3.0.0</title>
+    <title>サモンズボード工具 3.1.0</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root { --sb-gold: #f4e8c1; --sb-dark: #4d3a2b; --sb-btn: #d9c39e; --sb-red: #b33929; --sb-lightblue: #add8e6; --sb-text: #3e2723; --ui-red: #f44336; --ui-green: #4caf50; }
@@ -11,7 +11,6 @@
         body { background: #2a2018; font-family: -apple-system, system-ui, sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
         .card { background: var(--sb-gold); width: 100%; max-width: 420px; padding: 15px; border: 4px solid var(--sb-dark); border-radius: 12px; position: relative; overflow: hidden; }
         
-        /* 介面與控制按鈕 */
         .lang-v-group { position: absolute; top: 12px; right: 12px; z-index: 100; display: flex; gap: 6px; }
         .lang-v-btn { background: var(--sb-dark); color: var(--sb-gold); border: 1px solid var(--sb-gold); border-radius: 4px; font-size: 10px; padding: 4px 8px; cursor: pointer; }
         .title-group { margin-bottom: 8px; min-height: 50px; }
@@ -26,7 +25,6 @@
         .btn-ui.active { background: var(--sb-dark); color: var(--sb-gold); }
         .btn-ui.disabled { opacity: 0.3; filter: grayscale(1); }
 
-        /* 核心畫布 */
         #board-wrapper { width: 100%; aspect-ratio: 1/1; background: #fff; border: 4px solid var(--sb-dark); margin: 10px 0; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         #container { display: grid; width: 100%; height: 100%; grid-template-columns: repeat(var(--cols, 8), 1fr); grid-template-rows: repeat(var(--cols, 8), 1fr); }
         .is-m#board-wrapper { background: transparent; border-color: transparent; }
@@ -54,13 +52,11 @@
         textarea { width: 100%; border: none; background: transparent; font-size: 16px; font-weight: 800; resize: none; outline: none; display: block; -webkit-appearance: none; }
         .area-text { display: none; white-space: pre-wrap; font-size: 16px; font-weight: 800; color: var(--sb-text); padding-bottom: 10px; }
 
-        /* 導出層 (iOS 核心修復) */
         #export-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; }
         #export-img { max-width: 100%; border: 4px solid white; border-radius: 8px; margin-bottom: 20px; }
         .overlay-tip { color: white; font-weight: bold; margin-bottom: 15px; text-align: center; }
         .close-btn { background: var(--ui-red); color: white; padding: 10px 30px; border-radius: 20px; font-weight: bold; cursor: pointer; }
 
-        /* 截圖模式隱藏 UI */
         .is-capturing .p-input, .is-capturing textarea, .is-capturing [data-html2canvas-ignore="true"] { display: none !important; }
         .is-capturing .p-text, .is-capturing .area-text { display: block !important; }
     </style>
@@ -145,24 +141,29 @@
 
 <script>
     const TXT = {
-        zht: {s5:"5x5 基礎", s8:"8x8 攻略", s9:"9x9 演示", sm:"5+8 複合", c:"填色功能", a:"箭頭模式", s:"截圖系統", res:"重置", und:"撤回", clr:"清空數據", exp:"拼圖導出", l1:"技能類別", l2:"技能名稱", l3:"角色台詞", l4:"技能內容", p1:"請輸入關卡資訊...", p2:"請輸入角色資訊...", v1:"請輸入技能類別...", v2:"請輸入技能名稱...", v3:"請輸入角色台詞...", v4:"請輸入技能內容...", sel:"已選", unsel:"未選"},
+        zht: {s5:"5x5 基礎", s8:"8x8 攻略", s9:"9x9 演示", sm:"5+8 複合", c:"填色功能", a:"箭頭模式", s:"截圖系統", res:"重置", und:"撤回", clr:"清空本頁存檔", exp:"拼圖導出", l1:"技能類別", l2:"技能名稱", l3:"角色台詞", l4:"技能內容", p1:"請輸入關卡資訊...", p2:"請輸入角色資訊...", v1:"請輸入技能類別...", v2:"請輸入技能名稱...", v3:"請輸入角色台詞...", v4:"請輸入技能內容...", sel:"已選", unsel:"未選"},
         jp: {s5:"5x5 基礎", s8:"8x8 攻略", s9:"9x9 演習", sm:"5+8 複合", c:"着色機能", a:"矢印モード", s:"截图システム", res:"リセット", und:"戻る", clr:"データ消去", exp:"画像出力", l1:"タイプ", l2:"スキル名", l3:"セリフ", l4:"スキル詳細", p1:"ステージ情報...", p2:"キャラクター情報...", v1:"タイプを入力...", v2:"スキル名を入力...", v3:"セリフを入力...", v4:"スキル詳細を入力...", sel:"選擇済", unsel:"未選擇"}
     };
     const COLORS = {c_y:'#fff176', c_g:'#a5d6a7', c_o:'#ffcc80', c_r:'#ef9a9a', c_p:'#ce93d8', c_b:'#8d6e63', c_lg:'#f1f3f4', c_w:'#ffffff'};
     const ARR_ICON = { n:"↑", s:"↓", w:"←", e:"→", nw:"↖", ne:"↗", sw:"↙", se:"↘" };
     const SVG_CFG = { n:{x:50,y:37.5,r:0}, s:{x:50,y:62.5,r:180}, w:{x:37.5,y:50,r:270}, e:{x:62.5,y:50,r:90}, nw:{x:37.5,y:37.5,r:315}, ne:{x:62.5,y:37.5,r:45}, sw:{x:37.5,y:62.5,r:225}, se:{x:62.5,y:62.5,r:135} };
     
+    // 初始化單個存檔點的結構
+    function createEmptySlot() {
+        return { sz:8, t1:"", t2:"", v1:"", v2:"", v3:"", v4:"", 5:{cells:{}}, 8:{cells:{},arrows:{}}, 9:{cells:{}}, history:[] };
+    }
+
     let curS = 8, curI = 0, curC = null, curT = null, curL = 'zht';
-    let db = Array(16).fill(null).map(() => ({ sz:8, t1:"", t2:"", v1:"", v2:"", v3:"", v4:"", 5:{cells:{}}, 8:{cells:{},arrows:{}}, 9:{cells:{}}, history:[] }));
+    let db = Array(16).fill(null).map(() => createEmptySlot());
     let selFlags = Array(16).fill(false);
 
     function saveToDevice() {
         saveCur();
-        localStorage.setItem('SB_TOOL_V3_STORAGE', JSON.stringify({db, selFlags, curL}));
+        localStorage.setItem('SB_TOOL_V3_FINAL', JSON.stringify({db, selFlags, curL}));
     }
 
     function loadFromDevice() {
-        const raw = localStorage.getItem('SB_TOOL_V3_STORAGE');
+        const raw = localStorage.getItem('SB_TOOL_V3_FINAL');
         if (raw) {
             const data = JSON.parse(raw);
             db = data.db; selFlags = data.selFlags; curL = data.curL || 'zht';
@@ -289,7 +290,6 @@
         } 
     }
 
-    // iOS 截圖修復核心
     async function stitch() {
         saveCur(); saveToDevice();
         const ts = selFlags.map((v, i) => v ? i : -1).filter(v => v !== -1);
@@ -298,7 +298,6 @@
         const card = document.getElementById('main-capture'), backupI = curI, imgs = [];
         let maxHeight = 0;
         
-        // 1. 測量高度
         for (let id of ts) {
             load(id);
             ['p1','p2','v1','v2','v3','v4'].forEach(k => document.getElementById(k+'-t').innerText = document.getElementById(k).value || " ");
@@ -308,26 +307,23 @@
             card.classList.remove('is-capturing');
         }
 
-        // 2. 截圖
         card.style.height = maxHeight + 'px';
         card.classList.add('is-capturing');
         for (let id of ts) {
             load(id);
             ['p1','p2','v1','v2','v3','v4'].forEach(k => document.getElementById(k+'-t').innerText = document.getElementById(k).value || " ");
-            init(); await new Promise(r => setTimeout(r, 700)); // iOS 緩衝
+            init(); await new Promise(r => setTimeout(r, 700));
             const canvas = await html2canvas(card, { scale: 2, backgroundColor: "#f4e8c1", height: maxHeight, useCORS: true, logging: false });
             imgs.push(canvas);
         }
         card.classList.remove('is-capturing'); card.style.height = '';
 
-        // 3. 拼圖
         const r = (imgs.length <= 4) ? 1 : (imgs.length <= 8 ? 2 : (imgs.length <= 12 ? 3 : 4)), c = Math.ceil(imgs.length / r);
         const fCan = document.createElement('canvas'), ctx = fCan.getContext('2d');
         fCan.width = imgs[0].width * c; fCan.height = imgs[0].height * r;
         ctx.fillStyle = "#f4e8c1"; ctx.fillRect(0, 0, fCan.width, fCan.height);
         imgs.forEach((img, i) => { ctx.drawImage(img, (i % c) * img.width, Math.floor(i / c) * img.height); });
         
-        // 4. 顯示長按儲存層
         document.getElementById('export-img').src = fCan.toDataURL("image/png");
         document.getElementById('export-overlay').style.display = 'flex';
         load(backupI);
@@ -358,16 +354,28 @@
         bind('res-a', () => { if(curS !== 8) return; saveHistory(); db[curI][8].arrows = {}; render(); });
         bind('und-c', undo);
         bind('und-a', undo);
-        bind('clr-s', () => { if(confirm("Clear slot?")){ db[curI]={sz:8,t1:"",t2:"",v1:"",v2:"",v3:"",v4:"",5:{cells:{}},8:{cells:{},arrows:{}},9:{cells:{}},history:[]}; load(curI); saveToDevice(); }});
+        
+        // 聯動清除功能：清除當前存檔點的所有資料
+        bind('clr-s', () => { 
+            const msg = curL === 'zht' ? "確定要清除「目前編號」的所有存檔（文字與地圖）嗎？" : "このスロットのデータをすべて消去しますか？";
+            if(confirm(msg)){ 
+                db[curI] = createEmptySlot(); 
+                load(curI); 
+                saveToDevice(); 
+            }
+        });
+
         bind('exp-s', stitch);
         bind('close-overlay', () => document.getElementById('export-overlay').style.display = 'none');
         
         Object.keys(COLORS).forEach(id => bind(id, () => handleColorClick(id)));
         Object.keys(ARR_ICON).forEach(k => bind('btn-'+k, () => doA(k)));
 
+        // 自動存檔：所有欄位皆聯動
         ['p1', 'p2', 'v1', 'v2', 'v3', 'v4'].forEach(id => {
             document.getElementById(id).addEventListener('input', () => {
-                saveCur(); localStorage.setItem('SB_TOOL_V3_STORAGE', JSON.stringify({db, selFlags, curL}));
+                saveCur(); 
+                localStorage.setItem('SB_TOOL_V3_FINAL', JSON.stringify({db, selFlags, curL}));
             });
         });
 
